@@ -1,0 +1,17 @@
+[[requires]]
+  name = "nginx-config"
+
+  [requires.metadata]
+    launch = true
+
+[[requires]]
+  name = "nginx"
+
+  [requires.metadata]
+    launch = true
+
+[[requires]]
+  name = "php-fpm"
+
+  [requires.metadata]
+    launch = true

@@ -1,0 +1,1 @@
+web: php-fpm -y $PHP_FPM_PATH & nginx -p /workspace -c $PHP_NGINX_PATH
