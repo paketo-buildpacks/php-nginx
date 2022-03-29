@@ -14,7 +14,7 @@ import (
 	. "github.com/paketo-buildpacks/occam/matchers"
 )
 
-func testDefault(t *testing.T, context spec.G, it spec.S) {
+func testOffline(t *testing.T, context spec.G, it spec.S) {
 	var (
 		Expect     = NewWithT(t).Expect
 		Eventually = NewWithT(t).Eventually
@@ -61,10 +61,10 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 			image, logs, err = pack.WithNoColor().Build.
 				WithPullPolicy("never").
 				WithBuildpacks(
-					nginxBuildpack,
-					phpBuildpack,
-					phpFpmBuildpack,
-					buildpack,
+					offlineNginxBuildpack,
+					offlinePhpBuildpack,
+					offlinePhpFpmBuildpack,
+					offlineBuildpack,
 					buildPlanBuildpack,
 					procfileBuildpack,
 				).
@@ -72,8 +72,15 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 					"BP_LOG_LEVEL":  "DEBUG",
 					"BP_PHP_SERVER": "nginx",
 				}).
+				WithNetwork("none").
 				Execute(name, source)
 			Expect(err).ToNot(HaveOccurred(), logs.String)
+
+			Expect(logs).To(ContainLines(
+				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, buildpackInfo.Buildpack.Name)),
+				"  Getting the layer associated with the Nginx configuration",
+				"    /layers/paketo-buildpacks_php-nginx/php-nginx-config",
+			))
 
 			Expect(logs).To(ContainLines(
 				"  Setting up the Nginx configuration file",
@@ -86,12 +93,6 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 			Expect(logs).To(ContainLines(
 				"  Setting up the Nginx-specific FPM configuration file",
 				fmt.Sprintf("    FPM socket: /layers/%s/php-nginx-config/php-fpm.socket", strings.ReplaceAll(buildpackInfo.Buildpack.ID, "/", "_")),
-			))
-
-			Expect(logs).To(ContainLines(
-				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, buildpackInfo.Buildpack.Name)),
-				"  Getting the layer associated with the Nginx configuration",
-				"    /layers/paketo-buildpacks_php-nginx/php-nginx-config",
 			))
 
 			Expect(logs).To(ContainLines(

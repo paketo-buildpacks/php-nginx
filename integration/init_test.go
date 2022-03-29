@@ -23,7 +23,13 @@ var (
 	phpBuildpack       string
 	phpFpmBuildpack    string
 	procfileBuildpack  string
-	root               string
+
+	offlineBuildpack       string
+	offlineNginxBuildpack  string
+	offlinePhpBuildpack    string
+	offlinePhpFpmBuildpack string
+
+	root string
 
 	buildpackInfo struct {
 		Buildpack struct {
@@ -84,6 +90,27 @@ func TestIntegration(t *testing.T) {
 		Execute(config.PhpFpm)
 	Expect(err).NotTo(HaveOccurred())
 
+	offlineBuildpack, err = buildpackStore.Get.
+		WithOfflineDependencies().
+		WithVersion("1.2.3").
+		Execute(root)
+	Expect(err).NotTo(HaveOccurred())
+
+	offlineNginxBuildpack, err = buildpackStore.Get.
+		WithOfflineDependencies().
+		Execute(config.Nginx)
+	Expect(err).NotTo(HaveOccurred())
+
+	offlinePhpBuildpack, err = buildpackStore.Get.
+		WithOfflineDependencies().
+		Execute(config.Php)
+	Expect(err).NotTo(HaveOccurred())
+
+	offlinePhpFpmBuildpack, err = buildpackStore.Get.
+		WithOfflineDependencies().
+		Execute(config.PhpFpm)
+	Expect(err).NotTo(HaveOccurred())
+
 	procfileBuildpack, err = buildpackStore.Get.
 		Execute(config.Procfile)
 	Expect(err).NotTo(HaveOccurred())
@@ -92,5 +119,6 @@ func TestIntegration(t *testing.T) {
 
 	suite := spec.New("Integration", spec.Report(report.Terminal{}), spec.Parallel())
 	suite("Default", testDefault)
+	suite("Offline", testOffline)
 	suite.Run(t)
 }
