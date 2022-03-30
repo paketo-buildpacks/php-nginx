@@ -20,8 +20,8 @@ variable to `nginx` at build-time.
 pack build my-nginx-app --env BP_PHP_SERVER="nginx"
 ```
 
-## Nginx Configuration Sources The base configuration file generated in this
-buildpack includes some default configuration, FPM-specific configuration, and
+## Nginx Configuration Sources 
+The base configuration file generated in this buildpack includes some default configuration, FPM-specific configuration, and
 has `include` sections for user-included configuration.
 
 #### FPM-specific Configuration
