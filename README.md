@@ -5,7 +5,7 @@ The buildpack generates the Nginx configuration file with the minimal set of
 options to get Nginx to work with FPM (FastCGI Process Manager), and
 incorporates configuration from users and environment variables. The final
 Nginx configuration file is available at
-`/layers/paketo-buildpacks_php-nginx/php-nginx-config/nginx.conf`, or locatable
+`/workspace/nginx.conf`, or locatable
 through the buildpack-set `$PHP_NGINX_PATH` environment variable at
 launch-time.
 
