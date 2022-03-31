@@ -1,5 +1,5 @@
 [[requires]]
-  name = "nginx-config"
+  name = "php-nginx-config"
 
   [requires.metadata]
     launch = true
