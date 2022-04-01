@@ -11,7 +11,7 @@ launch-time.
 
 ## Integration
 
-The PHP Nginx CNB provides `php-nginx`, which can be required by subsequent
+The PHP Nginx CNB provides `php-nginx-config`, which can be required by subsequent
 buildpacks. In order to configure Nginx, the user must declare the intention to
 use Nginx as the web-server by setting the `$BP_PHP_SERVER` environment
 variable to `nginx` at build-time.
