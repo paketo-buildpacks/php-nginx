@@ -1,0 +1,19 @@
+api = "0.7"
+
+[buildpack]
+  description = "A buildpack for configuring Nginx for PHP apps"
+  homepage = "https://github.com/paketo-buildpacks/php-nginx"
+  id = "paketo-buildpacks/php-nginx"
+  keywords = ["php", "nginx"]
+  name = "Paketo PHP Nginx Buildpack"
+
+  [[buildpack.licenses]]
+    type = "Apache-2.0"
+    uri = "https://github.com/paketo-buildpacks/php-nginx/blob/main/LICENSE"
+
+[metadata]
+  include-files = ["bin/build", "bin/detect", "bin/run", "buildpack.toml", "config/nginx.conf", "config/nginx-fpm.conf"]
+  pre-package = "./scripts/build.sh"
+
+[[stacks]]
+  id = "io.buildpacks.stacks.bionic"
