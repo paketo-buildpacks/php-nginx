@@ -1,8 +1,6 @@
 package phpnginx
 
 import (
-	"time"
-
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/chronos"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
@@ -68,9 +66,6 @@ func Build(entryResolver EntryResolver, nginxConfigWriter ConfigWriter, nginxFpm
 
 		// test this
 		phpNginxLayer.SharedEnv.Default("PHP_NGINX_PATH", nginxConfigPath)
-		phpNginxLayer.Metadata = map[string]interface{}{
-			"built_at": clock.Now().Format(time.RFC3339Nano),
-		}
 		logger.EnvironmentVariables(phpNginxLayer)
 
 		return packit.BuildResult{
