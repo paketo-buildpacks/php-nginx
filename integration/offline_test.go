@@ -69,8 +69,9 @@ func testOffline(t *testing.T, context spec.G, it spec.S) {
 					procfileBuildpack,
 				).
 				WithEnv(map[string]string{
-					"BP_LOG_LEVEL":  "DEBUG",
-					"BP_PHP_SERVER": "nginx",
+					"BP_LOG_LEVEL":           "DEBUG",
+					"BP_PHP_SERVER":          "nginx",
+					"BP_NGINX_CONF_LOCATION": "/layers/paketo-buildpacks_php-nginx/php-nginx-config/nginx.conf",
 				}).
 				WithNetwork("none").
 				Execute(name, source)
@@ -97,12 +98,12 @@ func testOffline(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(logs).To(ContainLines(
 				"  Configuring build environment",
-				`    PHP_NGINX_PATH -> "/workspace/nginx.conf"`,
+				`    PHP_NGINX_PATH -> "/layers/paketo-buildpacks_php-nginx/php-nginx-config/nginx.conf"`,
 			))
 
 			Expect(logs).To(ContainLines(
 				"  Configuring launch environment",
-				`    PHP_NGINX_PATH -> "/workspace/nginx.conf"`,
+				`    PHP_NGINX_PATH -> "/layers/paketo-buildpacks_php-nginx/php-nginx-config/nginx.conf"`,
 			))
 
 			container, err = docker.Container.Run.

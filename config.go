@@ -108,7 +108,7 @@ func (c NginxConfigWriter) Write(layerPath, workingDir, cnbPath string) (string,
 		return "", err
 	}
 
-	f, err := os.OpenFile(filepath.Join(workingDir, "nginx.conf"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	f, err := os.OpenFile(filepath.Join(layerPath, "nginx.conf"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		return "", err
 	}

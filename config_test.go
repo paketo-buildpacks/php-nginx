@@ -75,8 +75,8 @@ listen = {{.FpmSocket}};
 			path, err := nginxConfigWriter.Write(layerDir, workingDir, cnbDir)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(path).To(Equal(filepath.Join(workingDir, "nginx.conf")))
-			Expect(filepath.Join(workingDir, "nginx.conf")).To(BeARegularFile())
+			Expect(path).To(Equal(filepath.Join(layerDir, "nginx.conf")))
+			Expect(filepath.Join(layerDir, "nginx.conf")).To(BeARegularFile())
 
 			contents, err := os.ReadFile(path)
 			Expect(err).NotTo(HaveOccurred())
@@ -102,10 +102,10 @@ listen = {{.FpmSocket}};
 			it("writes an nginx.conf with the user included configurations into workingDir", func() {
 				path, err := nginxConfigWriter.Write(layerDir, workingDir, cnbDir)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(path).To(Equal(filepath.Join(workingDir, "nginx.conf")))
-				Expect(filepath.Join(workingDir, "nginx.conf")).To(BeARegularFile())
+				Expect(path).To(Equal(filepath.Join(layerDir, "nginx.conf")))
+				Expect(filepath.Join(layerDir, "nginx.conf")).To(BeARegularFile())
 
-				contents, err := os.ReadFile(filepath.Join(workingDir, "nginx.conf"))
+				contents, err := os.ReadFile(filepath.Join(layerDir, "nginx.conf"))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(contents)).To(ContainSubstring(fmt.Sprintf("include %s/.nginx.conf.d/*-server.conf", workingDir)))
 				Expect(string(contents)).To(ContainSubstring(fmt.Sprintf("include %s/.nginx.conf.d/*-http.conf", workingDir)))
@@ -126,9 +126,9 @@ listen = {{.FpmSocket}};
 			it("writes an nginx.conf that includes the environment variable values", func() {
 				path, err := nginxConfigWriter.Write(layerDir, workingDir, cnbDir)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(path).To(Equal(filepath.Join(workingDir, "nginx.conf")))
+				Expect(path).To(Equal(filepath.Join(layerDir, "nginx.conf")))
 
-				contents, err := os.ReadFile(filepath.Join(workingDir, "nginx.conf"))
+				contents, err := os.ReadFile(filepath.Join(layerDir, "nginx.conf"))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(contents)).To(ContainSubstring(fmt.Sprintf("%s/some-web-dir;", workingDir)))
 				Expect(string(contents)).To(ContainSubstring("if !true"))
@@ -163,7 +163,7 @@ listen = {{.FpmSocket}};
 
 			context("when conf file can't be opened for writing", func() {
 				it.Before(func() {
-					Expect(os.WriteFile(filepath.Join(workingDir, "nginx.conf"), nil, 0400)).To(Succeed())
+					Expect(os.WriteFile(filepath.Join(layerDir, "nginx.conf"), nil, 0400)).To(Succeed())
 				})
 				it("returns an error", func() {
 					_, err := nginxConfigWriter.Write(layerDir, workingDir, cnbDir)
