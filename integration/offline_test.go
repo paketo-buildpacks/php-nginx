@@ -79,7 +79,7 @@ func testOffline(t *testing.T, context spec.G, it spec.S) {
 			Expect(logs).To(ContainLines(
 				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, buildpackInfo.Buildpack.Name)),
 				"  Getting the layer associated with the Nginx configuration",
-				"    /layers/paketo-buildpacks_php-nginx/php-nginx-config",
+				ContainSubstring(fmt.Sprintf("    /layers/%s/php-nginx-config", strings.ReplaceAll(buildpackInfo.Buildpack.ID, "/", "_"))),
 			))
 
 			Expect(logs).To(ContainLines(
