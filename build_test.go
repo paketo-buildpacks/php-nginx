@@ -28,7 +28,6 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		buffer               *bytes.Buffer
 		nginxConfigWriter    *fakes.ConfigWriter
 		nginxFpmConfigWriter *fakes.ConfigWriter
-		entryResolver        *fakes.EntryResolver
 
 		build packit.BuildFunc
 	)
@@ -47,15 +46,13 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		buffer = bytes.NewBuffer(nil)
 		logEmitter := scribe.NewEmitter(buffer)
 
-		entryResolver = &fakes.EntryResolver{}
-
 		nginxConfigWriter = &fakes.ConfigWriter{}
 		nginxFpmConfigWriter = &fakes.ConfigWriter{}
 
 		nginxConfigWriter.WriteCall.Returns.String = "some-workspace/nginx.conf"
 		nginxFpmConfigWriter.WriteCall.Returns.String = "some-workspace/nginx-fpm.conf"
 
-		build = phpnginx.Build(entryResolver, nginxConfigWriter, nginxFpmConfigWriter, logEmitter)
+		build = phpnginx.Build(nginxConfigWriter, nginxFpmConfigWriter, logEmitter)
 	})
 
 	it.After(func() {
@@ -89,11 +86,6 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(nginxFpmConfigWriter.WriteCall.Receives.WorkingDir).To(Equal(workingDir))
 		Expect(nginxFpmConfigWriter.WriteCall.Receives.CnbPath).To(Equal(cnbDir))
 
-		Expect(entryResolver.MergeLayerTypesCall.Receives.Name).To(Equal(phpnginx.PhpNginxConfig))
-		Expect(entryResolver.MergeLayerTypesCall.Receives.Entries).To(Equal([]packit.BuildpackPlanEntry{
-			{Name: "some-entry"},
-		}))
-
 		Expect(result.Layers).To(HaveLen(1))
 		Expect(result.Layers[0].Name).To(Equal("php-nginx-config"))
 		Expect(result.Layers[0].Path).To(Equal(filepath.Join(layerDir, "php-nginx-config")))
@@ -107,9 +99,6 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("when nginx-config is required at launch time", func() {
-		it.Before(func() {
-			entryResolver.MergeLayerTypesCall.Returns.Launch = true
-		})
 		it("makes the layer available at launch time", func() {
 			result, err := build(packit.BuildContext{
 				WorkingDir: workingDir,
@@ -121,7 +110,12 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				},
 				Plan: packit.BuildpackPlan{
 					Entries: []packit.BuildpackPlanEntry{
-						{Name: "some-entry"},
+						{
+							Name: phpnginx.PhpNginxConfig,
+							Metadata: map[string]interface{}{
+								"launch": true,
+							},
+						},
 					},
 				},
 				Layers: packit.Layers{Path: layerDir},
