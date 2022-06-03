@@ -53,11 +53,8 @@ func Build(nginxConfigWriter ConfigWriter, nginxFpmConfigWriter ConfigWriter, lo
 		logger.Break()
 
 		planner := draft.NewPlanner()
-		launch, build := planner.MergeLayerTypes(PhpNginxConfig, context.Plan.Entries)
-		phpNginxLayer.Launch = launch
-		phpNginxLayer.Build = build
+		phpNginxLayer.Launch, phpNginxLayer.Build = planner.MergeLayerTypes(PhpNginxConfig, context.Plan.Entries)
 
-		// test this
 		phpNginxLayer.SharedEnv.Default("PHP_NGINX_PATH", nginxConfigPath)
 		logger.EnvironmentVariables(phpNginxLayer)
 
