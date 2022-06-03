@@ -29,7 +29,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		nginxConfigWriter    *fakes.ConfigWriter
 		nginxFpmConfigWriter *fakes.ConfigWriter
 
-		buildContext packit.BuildContext
+		buildContext          packit.BuildContext
+		expectedPhpNginxLayer packit.Layer
 
 		build packit.BuildFunc
 	)
@@ -72,6 +73,17 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Layers: packit.Layers{Path: layerDir},
 		}
 
+		expectedPhpNginxLayer = packit.Layer{
+			Path: filepath.Join(layerDir, phpnginx.PhpNginxConfigLayer),
+			Name: phpnginx.PhpNginxConfigLayer,
+			SharedEnv: packit.Environment{
+				"PHP_NGINX_PATH.default": "some-workspace/nginx.conf",
+			},
+			BuildEnv:         packit.Environment{},
+			LaunchEnv:        packit.Environment{},
+			ProcessLaunchEnv: map[string]packit.Environment{},
+		}
+
 		build = phpnginx.Build(nginxConfigWriter, nginxFpmConfigWriter, logEmitter)
 	})
 
@@ -94,15 +106,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(nginxFpmConfigWriter.WriteCall.Receives.CnbPath).To(Equal(cnbDir))
 
 		Expect(result.Layers).To(HaveLen(1))
-		Expect(result.Layers[0].Name).To(Equal("php-nginx-config"))
-		Expect(result.Layers[0].Path).To(Equal(filepath.Join(layerDir, "php-nginx-config")))
-		Expect(result.Layers[0].SharedEnv).To(Equal(packit.Environment{
-			"PHP_NGINX_PATH.default": "some-workspace/nginx.conf",
-		}))
-
-		Expect(result.Layers[0].Build).To(BeFalse())
-		Expect(result.Layers[0].Cache).To(BeFalse())
-		Expect(result.Layers[0].Launch).To(BeFalse())
+		Expect(result.Layers[0]).To(Equal(expectedPhpNginxLayer))
 	})
 
 	context("when nginx-config is required at launch time", func() {
@@ -110,6 +114,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			buildContext.Plan.Entries[0].Metadata = map[string]interface{}{
 				"launch": true,
 			}
+
+			expectedPhpNginxLayer.Launch = true
 		})
 
 		it("makes the layer available at launch time", func() {
@@ -117,15 +123,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result.Layers).To(HaveLen(1))
-			Expect(result.Layers[0].Name).To(Equal("php-nginx-config"))
-			Expect(result.Layers[0].Path).To(Equal(filepath.Join(layerDir, "php-nginx-config")))
-			Expect(result.Layers[0].SharedEnv).To(Equal(packit.Environment{
-				"PHP_NGINX_PATH.default": "some-workspace/nginx.conf",
-			}))
-
-			Expect(result.Layers[0].Launch).To(BeTrue())
-			Expect(result.Layers[0].Build).To(BeFalse())
-			Expect(result.Layers[0].Cache).To(BeFalse())
+			Expect(result.Layers[0]).To(Equal(expectedPhpNginxLayer))
 		})
 	})
 
