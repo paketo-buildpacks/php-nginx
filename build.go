@@ -2,7 +2,6 @@ package phpnginx
 
 import (
 	"github.com/paketo-buildpacks/packit/v2"
-	"github.com/paketo-buildpacks/packit/v2/chronos"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 )
 
@@ -29,7 +28,7 @@ type ConfigWriter interface {
 // settings, incorporate other configuration sources, and make the
 // configuration available at both build-time and
 // launch-time.
-func Build(entryResolver EntryResolver, nginxConfigWriter ConfigWriter, nginxFpmConfigWriter ConfigWriter, clock chronos.Clock, logger scribe.Emitter) packit.BuildFunc {
+func Build(entryResolver EntryResolver, nginxConfigWriter ConfigWriter, nginxFpmConfigWriter ConfigWriter, logger scribe.Emitter) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 

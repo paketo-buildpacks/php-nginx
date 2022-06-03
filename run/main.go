@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/paketo-buildpacks/packit/v2"
-	"github.com/paketo-buildpacks/packit/v2/chronos"
 	"github.com/paketo-buildpacks/packit/v2/draft"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	phpnginx "github.com/paketo-buildpacks/php-nginx"
@@ -18,6 +17,6 @@ func main() {
 
 	packit.Run(
 		phpnginx.Detect(),
-		phpnginx.Build(entryResolver, nginxConfigWriter, nginxFpmConfigWriter, chronos.DefaultClock, logEmitter),
+		phpnginx.Build(entryResolver, nginxConfigWriter, nginxFpmConfigWriter, logEmitter),
 	)
 }

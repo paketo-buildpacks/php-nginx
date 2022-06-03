@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/paketo-buildpacks/packit/v2"
-	"github.com/paketo-buildpacks/packit/v2/chronos"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	phpnginx "github.com/paketo-buildpacks/php-nginx"
 	"github.com/paketo-buildpacks/php-nginx/fakes"
@@ -56,7 +55,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		nginxConfigWriter.WriteCall.Returns.String = "some-workspace/nginx.conf"
 		nginxFpmConfigWriter.WriteCall.Returns.String = "some-workspace/nginx-fpm.conf"
 
-		build = phpnginx.Build(entryResolver, nginxConfigWriter, nginxFpmConfigWriter, chronos.DefaultClock, logEmitter)
+		build = phpnginx.Build(entryResolver, nginxConfigWriter, nginxFpmConfigWriter, logEmitter)
 	})
 
 	it.After(func() {
