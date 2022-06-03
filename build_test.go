@@ -37,10 +37,10 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		layerDir, err = os.MkdirTemp("", "layer")
 		Expect(err).NotTo(HaveOccurred())
 
-		cnbDir, err = os.MkdirTemp("", "cnb")
+		workingDir, err = os.MkdirTemp("", "working-dir")
 		Expect(err).NotTo(HaveOccurred())
 
-		workingDir, err = os.MkdirTemp("", "working-dir")
+		cnbDir, err = os.MkdirTemp("", "cnb")
 		Expect(err).NotTo(HaveOccurred())
 
 		buffer = bytes.NewBuffer(nil)
@@ -56,8 +56,9 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it.After(func() {
-		Expect(os.RemoveAll(cnbDir)).To(Succeed())
+		Expect(os.RemoveAll(layerDir)).To(Succeed())
 		Expect(os.RemoveAll(workingDir)).To(Succeed())
+		Expect(os.RemoveAll(cnbDir)).To(Succeed())
 	})
 
 	it("writes an nginx config file and an nginx-fpm config file into its layer", func() {
@@ -141,6 +142,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				err := os.WriteFile(filepath.Join(layerDir, fmt.Sprintf("%s.toml", phpnginx.PhpNginxConfigLayer)), nil, 0000)
 				Expect(err).NotTo(HaveOccurred())
 			})
+
 			it("returns an error", func() {
 				_, err := build(packit.BuildContext{
 					WorkingDir: workingDir,
@@ -165,6 +167,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			it.Before(func() {
 				nginxConfigWriter.WriteCall.Returns.Error = errors.New("nginx config writing error")
 			})
+
 			it("returns an error", func() {
 				_, err := build(packit.BuildContext{
 					WorkingDir: workingDir,
