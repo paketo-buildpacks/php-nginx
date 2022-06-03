@@ -29,6 +29,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		nginxConfigWriter    *fakes.ConfigWriter
 		nginxFpmConfigWriter *fakes.ConfigWriter
 
+		buildContext packit.BuildContext
+
 		build packit.BuildFunc
 	)
 
@@ -52,6 +54,24 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		nginxConfigWriter.WriteCall.Returns.String = "some-workspace/nginx.conf"
 		nginxFpmConfigWriter.WriteCall.Returns.String = "some-workspace/nginx-fpm.conf"
 
+		buildContext = packit.BuildContext{
+			WorkingDir: workingDir,
+			CNBPath:    cnbDir,
+			Stack:      "some-stack",
+			BuildpackInfo: packit.BuildpackInfo{
+				Name:    "Some Buildpack",
+				Version: "some-version",
+			},
+			Plan: packit.BuildpackPlan{
+				Entries: []packit.BuildpackPlanEntry{
+					{
+						Name: phpnginx.PhpNginxConfig,
+					},
+				},
+			},
+			Layers: packit.Layers{Path: layerDir},
+		}
+
 		build = phpnginx.Build(nginxConfigWriter, nginxFpmConfigWriter, logEmitter)
 	})
 
@@ -62,21 +82,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("writes an nginx config file and an nginx-fpm config file into its layer", func() {
-		result, err := build(packit.BuildContext{
-			WorkingDir: workingDir,
-			CNBPath:    cnbDir,
-			Stack:      "some-stack",
-			BuildpackInfo: packit.BuildpackInfo{
-				Name:    "Some Buildpack",
-				Version: "some-version",
-			},
-			Plan: packit.BuildpackPlan{
-				Entries: []packit.BuildpackPlanEntry{
-					{Name: "some-entry"},
-				},
-			},
-			Layers: packit.Layers{Path: layerDir},
-		})
+		result, err := build(buildContext)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(nginxConfigWriter.WriteCall.Receives.LayerPath).To(Equal(filepath.Join(layerDir, "php-nginx-config")))
@@ -100,27 +106,14 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("when nginx-config is required at launch time", func() {
+		it.Before(func() {
+			buildContext.Plan.Entries[0].Metadata = map[string]interface{}{
+				"launch": true,
+			}
+		})
+
 		it("makes the layer available at launch time", func() {
-			result, err := build(packit.BuildContext{
-				WorkingDir: workingDir,
-				CNBPath:    cnbDir,
-				Stack:      "some-stack",
-				BuildpackInfo: packit.BuildpackInfo{
-					Name:    "Some Buildpack",
-					Version: "some-version",
-				},
-				Plan: packit.BuildpackPlan{
-					Entries: []packit.BuildpackPlanEntry{
-						{
-							Name: phpnginx.PhpNginxConfig,
-							Metadata: map[string]interface{}{
-								"launch": true,
-							},
-						},
-					},
-				},
-				Layers: packit.Layers{Path: layerDir},
-			})
+			result, err := build(buildContext)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result.Layers).To(HaveLen(1))
@@ -144,21 +137,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			})
 
 			it("returns an error", func() {
-				_, err := build(packit.BuildContext{
-					WorkingDir: workingDir,
-					CNBPath:    cnbDir,
-					Stack:      "some-stack",
-					BuildpackInfo: packit.BuildpackInfo{
-						Name:    "Some Buildpack",
-						Version: "some-version",
-					},
-					Plan: packit.BuildpackPlan{
-						Entries: []packit.BuildpackPlanEntry{
-							{Name: phpnginx.PhpNginxConfigLayer},
-						},
-					},
-					Layers: packit.Layers{Path: layerDir},
-				})
+				_, err := build(buildContext)
 				Expect(err).To(MatchError(ContainSubstring("failed to parse layer content metadata")))
 			})
 		})
@@ -169,21 +148,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			})
 
 			it("returns an error", func() {
-				_, err := build(packit.BuildContext{
-					WorkingDir: workingDir,
-					CNBPath:    cnbDir,
-					Stack:      "some-stack",
-					BuildpackInfo: packit.BuildpackInfo{
-						Name:    "Some Buildpack",
-						Version: "some-version",
-					},
-					Plan: packit.BuildpackPlan{
-						Entries: []packit.BuildpackPlanEntry{
-							{Name: phpnginx.PhpNginxConfigLayer},
-						},
-					},
-					Layers: packit.Layers{Path: layerDir},
-				})
+				_, err := build(buildContext)
 				Expect(err).To(MatchError(ContainSubstring("nginx config writing error")))
 			})
 		})
@@ -194,21 +159,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			})
 
 			it("returns an error", func() {
-				_, err := build(packit.BuildContext{
-					WorkingDir: workingDir,
-					CNBPath:    cnbDir,
-					Stack:      "some-stack",
-					BuildpackInfo: packit.BuildpackInfo{
-						Name:    "Some Buildpack",
-						Version: "some-version",
-					},
-					Plan: packit.BuildpackPlan{
-						Entries: []packit.BuildpackPlanEntry{
-							{Name: phpnginx.PhpNginxConfigLayer},
-						},
-					},
-					Layers: packit.Layers{Path: layerDir},
-				})
+				_, err := build(buildContext)
 				Expect(err).To(MatchError(ContainSubstring("nginx-fpm config writing error")))
 			})
 		})
