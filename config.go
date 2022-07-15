@@ -2,8 +2,8 @@ package phpnginx
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,6 +11,12 @@ import (
 
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 )
+
+//go:embed assets/nginx.conf
+var NGINXConfTemplate string
+
+//go:embed assets/nginx-fpm.conf
+var NGINXFPMConfTemplate string
 
 type NginxConfig struct {
 	UserServerConf       string
@@ -45,8 +51,8 @@ func NewFpmNginxConfigWriter(logger scribe.Emitter) NginxFpmConfigWriter {
 	}
 }
 
-func (c NginxConfigWriter) Write(layerPath, workingDir, cnbPath string) (string, error) {
-	tmpl, err := template.New("nginx.conf").ParseFiles(filepath.Join(cnbPath, "config", "nginx.conf"))
+func (c NginxConfigWriter) Write(workingDir string) (string, error) {
+	tmpl, err := template.New("nginx.conf").Parse(NGINXConfTemplate)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse Nginx config template: %w", err)
 	}
@@ -55,6 +61,7 @@ func (c NginxConfigWriter) Write(layerPath, workingDir, cnbPath string) (string,
 		AppRoot: workingDir,
 	}
 
+	var configFiles []string
 	// Configuration set by this buildpack
 	// If there's a user-provided Nginx conf, include it in the base configuration.
 	userServerConf := filepath.Join(workingDir, ".nginx.conf.d", "*-server.conf")
@@ -65,6 +72,7 @@ func (c NginxConfigWriter) Write(layerPath, workingDir, cnbPath string) (string,
 	}
 	if len(userServerMatches) > 0 {
 		data.UserServerConf = userServerConf
+		configFiles = append(configFiles, userServerMatches...)
 		c.logger.Debug.Subprocess(fmt.Sprintf("Including user-provided Nginx server configuration from: %s", userServerConf))
 	}
 
@@ -76,6 +84,7 @@ func (c NginxConfigWriter) Write(layerPath, workingDir, cnbPath string) (string,
 	}
 	if len(userHttpMatches) > 0 {
 		data.UserHttpConf = userHttpConf
+		configFiles = append(configFiles, userHttpMatches...)
 		c.logger.Debug.Subprocess(fmt.Sprintf("Including user-provided Nginx HTTP configuration from: %s", userHttpConf))
 	}
 
@@ -97,7 +106,7 @@ func (c NginxConfigWriter) Write(layerPath, workingDir, cnbPath string) (string,
 	data.DisableHTTPSRedirect = !enableHTTPSRedirect
 	c.logger.Debug.Subprocess(fmt.Sprintf("Enable HTTPS redirect: %t", enableHTTPSRedirect))
 
-	fpmSocket := filepath.Join(layerPath, "php-fpm.socket")
+	fpmSocket := "/tmp/php-fpm.socket"
 	data.FpmSocket = fpmSocket
 	c.logger.Debug.Subprocess(fmt.Sprintf("FPM socket: %s", fpmSocket))
 
@@ -108,23 +117,29 @@ func (c NginxConfigWriter) Write(layerPath, workingDir, cnbPath string) (string,
 		return "", err
 	}
 
-	f, err := os.OpenFile(filepath.Join(workingDir, "nginx.conf"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	path := filepath.Join(workingDir, "nginx.conf")
+	err = os.WriteFile(path, b.Bytes(), 0600)
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
 
-	_, err = io.Copy(f, &b)
-	if err != nil {
-		// not tested
-		return "", err
+	for _, file := range append(configFiles, path) {
+		info, err := os.Stat(file)
+		if err != nil {
+			return "", err
+		}
+
+		err = os.Chmod(file, info.Mode()|0060)
+		if err != nil {
+			return "", err
+		}
 	}
 
-	return f.Name(), nil
+	return path, nil
 }
 
-func (c NginxFpmConfigWriter) Write(layerPath, workingDir, cnbPath string) (string, error) {
-	tmpl, err := template.New("nginx-fpm.conf").ParseFiles(filepath.Join(cnbPath, "config", "nginx-fpm.conf"))
+func (c NginxFpmConfigWriter) Write(workingDir string) (string, error) {
+	tmpl, err := template.New("nginx-fpm.conf").Parse(NGINXFPMConfTemplate)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse Nginx-Fpm config template: %w", err)
 	}
@@ -132,7 +147,7 @@ func (c NginxFpmConfigWriter) Write(layerPath, workingDir, cnbPath string) (stri
 	// Configuration set by this buildpack
 
 	// If there's a user-provided Nginx conf, include it in the base configuration.
-	fpmSocket := filepath.Join(layerPath, "php-fpm.socket")
+	fpmSocket := "/tmp/php-fpm.socket"
 	c.logger.Debug.Subprocess(fmt.Sprintf("FPM socket: %s", fpmSocket))
 
 	data := NginxFpmConfig{
@@ -146,17 +161,21 @@ func (c NginxFpmConfigWriter) Write(layerPath, workingDir, cnbPath string) (stri
 		return "", err
 	}
 
-	f, err := os.OpenFile(filepath.Join(workingDir, ".php.fpm.bp", "nginx-fpm.conf"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	path := filepath.Join(workingDir, ".php.fpm.bp", "nginx-fpm.conf")
+	err = os.WriteFile(path, b.Bytes(), 0600)
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
 
-	_, err = io.Copy(f, &b)
+	info, err := os.Stat(path)
 	if err != nil {
-		// not tested
 		return "", err
 	}
 
-	return f.Name(), nil
+	err = os.Chmod(path, info.Mode()|0040)
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
 }

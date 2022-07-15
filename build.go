@@ -11,7 +11,7 @@ import (
 // ConfigWriter sets up the default Nginx configuration file and incorporates
 // any user configurations.
 type ConfigWriter interface {
-	Write(layerPath, workingDir, cnbPath string) (string, error)
+	Write(workingDir string) (string, error)
 }
 
 // Build will return a packit.BuildFunc that will be invoked during the build
@@ -39,14 +39,14 @@ func Build(nginxConfigWriter ConfigWriter, nginxFpmConfigWriter ConfigWriter, lo
 		}
 
 		logger.Process("Setting up the Nginx configuration file")
-		nginxConfigPath, err := nginxConfigWriter.Write(phpNginxLayer.Path, context.WorkingDir, context.CNBPath)
+		nginxConfigPath, err := nginxConfigWriter.Write(context.WorkingDir)
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
 		logger.Break()
 
 		logger.Process("Setting up the Nginx-specific FPM configuration file")
-		_, err = nginxFpmConfigWriter.Write(phpNginxLayer.Path, context.WorkingDir, context.CNBPath)
+		_, err = nginxFpmConfigWriter.Write(context.WorkingDir)
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
