@@ -97,13 +97,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		result, err := build(buildContext)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(nginxConfigWriter.WriteCall.Receives.LayerPath).To(Equal(filepath.Join(layerDir, "php-nginx-config")))
 		Expect(nginxConfigWriter.WriteCall.Receives.WorkingDir).To(Equal(workingDir))
-		Expect(nginxConfigWriter.WriteCall.Receives.CnbPath).To(Equal(cnbDir))
-
-		Expect(nginxFpmConfigWriter.WriteCall.Receives.LayerPath).To(Equal(filepath.Join(layerDir, "php-nginx-config")))
 		Expect(nginxFpmConfigWriter.WriteCall.Receives.WorkingDir).To(Equal(workingDir))
-		Expect(nginxFpmConfigWriter.WriteCall.Receives.CnbPath).To(Equal(cnbDir))
 
 		Expect(result.Layers).To(HaveLen(1))
 		Expect(result.Layers[0]).To(Equal(expectedPhpNginxLayer))

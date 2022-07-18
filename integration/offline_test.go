@@ -87,12 +87,12 @@ func testOffline(t *testing.T, context spec.G, it spec.S) {
 				"    Including user-provided Nginx server configuration from: /workspace/.nginx.conf.d/*-server.conf",
 				"    Web directory: htdocs",
 				"    Enable HTTPS redirect: true",
-				fmt.Sprintf("    FPM socket: /layers/%s/php-nginx-config/php-fpm.socket", strings.ReplaceAll(buildpackInfo.Buildpack.ID, "/", "_")),
+				"    FPM socket: /tmp/php-fpm.socket",
 			))
 
 			Expect(logs).To(ContainLines(
 				"  Setting up the Nginx-specific FPM configuration file",
-				fmt.Sprintf("    FPM socket: /layers/%s/php-nginx-config/php-fpm.socket", strings.ReplaceAll(buildpackInfo.Buildpack.ID, "/", "_")),
+				"    FPM socket: /tmp/php-fpm.socket",
 			))
 
 			Expect(logs).To(ContainLines(
