@@ -12,7 +12,7 @@ api = "0.7"
     uri = "https://github.com/paketo-buildpacks/php-nginx/blob/main/LICENSE"
 
 [metadata]
-  include-files = ["bin/build", "bin/detect", "bin/run", "buildpack.toml", "config/nginx.conf", "config/nginx-fpm.conf"]
+  include-files = ["bin/build", "bin/detect", "bin/run", "buildpack.toml"]
   pre-package = "./scripts/build.sh"
 
 [[stacks]]
