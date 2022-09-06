@@ -5,7 +5,7 @@ api = "0.7"
   homepage = "https://github.com/paketo-buildpacks/php-nginx"
   id = "paketo-buildpacks/php-nginx"
   keywords = ["php", "nginx"]
-  name = "Paketo PHP Nginx Buildpack"
+  name = "Paketo Buildpack for PHP Nginx"
 
   [[buildpack.licenses]]
     type = "Apache-2.0"
