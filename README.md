@@ -47,8 +47,14 @@ the Nginx configuration file.
 
 | Variable | Default |
 | -------- | -------- |
+| `BP_PHP_NGINX_ENABLE_HTTPS`   | false    |
 | `BP_PHP_ENABLE_HTTPS_REDIRECT`   | true    |
 | `BP_PHP_WEB_DIR`    | htdocs    |
+
+Note that for HTTPS workloads, setting `$BP_PHP_NGINX_ENABLE_HTTPS` sets all
+connections to work in SSL mode. You may still need to add a user-included
+config file to provide directives like `ssl_certificate`, `ssl_certificate_key`
+etc.
 
 ## Usage
 

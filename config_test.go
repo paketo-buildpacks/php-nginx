@@ -101,11 +101,13 @@ func testConfig(t *testing.T, context spec.G, it spec.S) {
 		context("all config env. vars are set", func() {
 			it.Before(func() {
 				Expect(os.Setenv("BP_PHP_WEB_DIR", "some-web-dir")).To(Succeed())
+				Expect(os.Setenv("BP_PHP_NGINX_ENABLE_HTTPS", "true")).To(Succeed())
 				Expect(os.Setenv("BP_PHP_ENABLE_HTTPS_REDIRECT", "false")).To(Succeed())
 			})
 
 			it.After(func() {
 				Expect(os.Unsetenv("BP_PHP_ENABLE_HTTPS_REDIRECT")).To(Succeed())
+				Expect(os.Unsetenv("BP_PHP_NGINX_ENABLE_HTTPS")).To(Succeed())
 				Expect(os.Unsetenv("BP_PHP_WEB_DIR")).To(Succeed())
 			})
 
@@ -117,11 +119,27 @@ func testConfig(t *testing.T, context spec.G, it spec.S) {
 				contents, err := os.ReadFile(filepath.Join(workingDir, "nginx.conf"))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(contents)).To(ContainSubstring(fmt.Sprintf("%s/some-web-dir;", workingDir)))
+				Expect(string(contents)).To(ContainSubstring(`listen       {{env "PORT"}} ssl default_server;`))
 				Expect(string(contents)).NotTo(ContainSubstring("map $http_x_forwarded_proto $redirect_to_https"))
 			})
 		})
 
 		context("failure cases", func() {
+			context("when the BP_PHP_NGINX_ENABLE_HTTPS value cannot be parsed into a bool", func() {
+				it.Before(func() {
+					Expect(os.Setenv("BP_PHP_NGINX_ENABLE_HTTPS", "blah")).To(Succeed())
+				})
+
+				it.After(func() {
+					Expect(os.Unsetenv("BP_PHP_NGINX_ENABLE_HTTPS")).To(Succeed())
+				})
+
+				it("returns an error", func() {
+					_, err := nginxConfigWriter.Write(workingDir)
+					Expect(err).To(MatchError(ContainSubstring("failed to parse $BP_PHP_NGINX_ENABLE_HTTPS into boolean:")))
+				})
+			})
+
 			context("when the BP_PHP_ENABLE_HTTPS_REDIRECT value cannot be parsed into a bool", func() {
 				it.Before(func() {
 					Expect(os.Setenv("BP_PHP_ENABLE_HTTPS_REDIRECT", "blah")).To(Succeed())

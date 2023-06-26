@@ -86,6 +86,7 @@ func testOffline(t *testing.T, context spec.G, it spec.S) {
 				"  Setting up the Nginx configuration file",
 				"    Including user-provided Nginx server configuration from: /workspace/.nginx.conf.d/*-server.conf",
 				"    Web directory: htdocs",
+				"    Enable NGINX HTTPS: false",
 				"    Enable HTTPS redirect: true",
 				"    FPM socket: /tmp/php-fpm.socket",
 			))

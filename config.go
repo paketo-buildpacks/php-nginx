@@ -21,6 +21,7 @@ var NGINXFPMConfTemplate string
 type NginxConfig struct {
 	UserServerConf       string
 	UserHttpConf         string
+	EnableHTTPS          bool
 	DisableHTTPSRedirect bool
 	AppRoot              string
 	WebDirectory         string
@@ -94,6 +95,17 @@ func (c NginxConfigWriter) Write(workingDir string) (string, error) {
 	}
 	data.WebDirectory = webDir
 	c.logger.Debug.Subprocess(fmt.Sprintf("Web directory: %s", webDir))
+
+	enableHTTPS := false
+	enableHTTPSStr, ok := os.LookupEnv("BP_PHP_NGINX_ENABLE_HTTPS")
+	if ok {
+		enableHTTPS, err = strconv.ParseBool(enableHTTPSStr)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse $BP_PHP_NGINX_ENABLE_HTTPS into boolean: %w", err)
+		}
+	}
+	data.EnableHTTPS = enableHTTPS
+	c.logger.Debug.Subprocess(fmt.Sprintf("Enable NGINX HTTPS: %t", enableHTTPS))
 
 	enableHTTPSRedirect := true
 	enableHTTPSRedirectStr, ok := os.LookupEnv("BP_PHP_ENABLE_HTTPS_REDIRECT")
