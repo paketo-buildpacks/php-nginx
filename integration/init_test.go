@@ -10,6 +10,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/onsi/gomega/format"
 	"github.com/paketo-buildpacks/occam"
+	"github.com/paketo-buildpacks/occam/packagers"
 	"github.com/sclevine/spec"
 	"github.com/sclevine/spec/report"
 
@@ -68,6 +69,7 @@ func TestIntegration(t *testing.T) {
 	Expect(err).ToNot(HaveOccurred())
 
 	buildpackStore := occam.NewBuildpackStore()
+	libpakBuildpackStore := occam.NewBuildpackStore().WithPackager(packagers.NewLibpak())
 
 	buildpack, err = buildpackStore.Get.
 		WithVersion("1.2.3").
@@ -111,7 +113,7 @@ func TestIntegration(t *testing.T) {
 		Execute(config.PhpFpm)
 	Expect(err).NotTo(HaveOccurred())
 
-	procfileBuildpack, err = buildpackStore.Get.
+	procfileBuildpack, err = libpakBuildpackStore.Get.
 		Execute(config.Procfile)
 	Expect(err).NotTo(HaveOccurred())
 
