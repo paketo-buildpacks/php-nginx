@@ -55,7 +55,11 @@ func TestIntegration(t *testing.T) {
 
 	file, err := os.Open("../integration.json")
 	Expect(err).NotTo(HaveOccurred())
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			Expect(err).NotTo(HaveOccurred())
+		}
+	}()
 
 	Expect(json.NewDecoder(file).Decode(&config)).To(Succeed())
 
