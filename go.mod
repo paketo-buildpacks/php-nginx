@@ -1,8 +1,6 @@
 module github.com/paketo-buildpacks/php-nginx
 
-go 1.21
-
-toolchain go1.22.5
+go 1.26.1
 
 require (
 	github.com/BurntSushi/toml v1.4.0
@@ -10,7 +8,6 @@ require (
 	github.com/paketo-buildpacks/occam v0.18.7
 	github.com/paketo-buildpacks/packit/v2 v2.14.2
 	github.com/sclevine/spec v1.4.0
-
 )
 
 require (
