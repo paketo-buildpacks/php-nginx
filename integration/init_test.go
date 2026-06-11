@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -53,42 +54,49 @@ func TestIntegration(t *testing.T) {
 		Procfile  string `json:"procfile"`
 	}
 
-	file, err := os.Open("../integration.json")
+	integrationFile, err := os.Open("../integration.json")
 	Expect(err).NotTo(HaveOccurred())
-	defer file.Close()
+	defer func() {
+		if err := integrationFile.Close(); err != nil {
+			Expect(err).NotTo(HaveOccurred())
+		}
+	}()
 
-	Expect(json.NewDecoder(file).Decode(&config)).To(Succeed())
+	Expect(json.NewDecoder(integrationFile).Decode(&config)).To(Succeed())
 
-	file, err = os.Open("../buildpack.toml")
+	buildpackFile, err := os.Open("../buildpack.toml")
 	Expect(err).NotTo(HaveOccurred())
 
-	_, err = toml.NewDecoder(file).Decode(&buildpackInfo)
+	_, err = toml.NewDecoder(buildpackFile).Decode(&buildpackInfo)
 	Expect(err).NotTo(HaveOccurred())
+	Expect(buildpackFile.Close()).To(Succeed())
 
 	root, err = filepath.Abs("./..")
 	Expect(err).ToNot(HaveOccurred())
 
 	buildpackStore := occam.NewBuildpackStore()
 	libpakBuildpackStore := occam.NewBuildpackStore().WithPackager(packagers.NewLibpak())
+	targetedBuildpackStore := buildpackStore.WithTarget("linux/" + runtime.GOARCH)
+	targetedLibpakBuildpackStore := libpakBuildpackStore.WithTarget("linux/" + runtime.GOARCH)
 
 	buildpack, err = buildpackStore.Get.
 		WithVersion("1.2.3").
 		Execute(root)
 	Expect(err).NotTo(HaveOccurred())
 
-	buildPlanBuildpack, err = buildpackStore.Get.
+	buildPlanBuildpack, err = targetedBuildpackStore.Get.
 		Execute(config.BuildPlan)
 	Expect(err).NotTo(HaveOccurred())
 
-	nginxBuildpack, err = buildpackStore.Get.
+	nginxBuildpack, err = targetedBuildpackStore.Get.
 		Execute(config.Nginx)
 	Expect(err).NotTo(HaveOccurred())
 
-	phpBuildpack, err = buildpackStore.Get.
+	phpBuildpack, err = targetedBuildpackStore.Get.
 		Execute(config.Php)
 	Expect(err).NotTo(HaveOccurred())
 
-	phpFpmBuildpack, err = buildpackStore.Get.
+	phpFpmBuildpack, err = targetedBuildpackStore.Get.
 		Execute(config.PhpFpm)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -98,22 +106,22 @@ func TestIntegration(t *testing.T) {
 		Execute(root)
 	Expect(err).NotTo(HaveOccurred())
 
-	offlineNginxBuildpack, err = buildpackStore.Get.
+	offlineNginxBuildpack, err = targetedBuildpackStore.Get.
 		WithOfflineDependencies().
 		Execute(config.Nginx)
 	Expect(err).NotTo(HaveOccurred())
 
-	offlinePhpBuildpack, err = buildpackStore.Get.
+	offlinePhpBuildpack, err = targetedBuildpackStore.Get.
 		WithOfflineDependencies().
 		Execute(config.Php)
 	Expect(err).NotTo(HaveOccurred())
 
-	offlinePhpFpmBuildpack, err = buildpackStore.Get.
+	offlinePhpFpmBuildpack, err = targetedBuildpackStore.Get.
 		WithOfflineDependencies().
 		Execute(config.PhpFpm)
 	Expect(err).NotTo(HaveOccurred())
 
-	procfileBuildpack, err = libpakBuildpackStore.Get.
+	procfileBuildpack, err = targetedLibpakBuildpackStore.Get.
 		Execute(config.Procfile)
 	Expect(err).NotTo(HaveOccurred())
 
